@@ -221,11 +221,46 @@ if(process.argv.length !== 0)
             }
             process.stdout.write(await getBalances(process.argv[3])+"\n");
             break;
-        default:
+        case 'gettransfer':
+            if(await mustIndex()) {
+                block += 1;
+                await index(typeof process.argv[5] === 'undefined' ? 'main' : process.argv[5]);
+            }
+            process.stdout.write(await getTransfer(process.argv[3], parseInt(process.argv[4]))+"\n");
+            break;
+	default:
             process.stdout.write('{"error":true,"message":"Unknown command"}'+"\n");
             break;
     }
 }
+
+
+/**
+ * Returns an txid vout (utxo) based token balance.
+ *
+ * @param address
+ * @param ticker
+ * @param id
+ * @returns {Promise<{ticker, amt_big: string, decimals: *, amt, id}|null>}
+ */
+async function getTransfer(txid,vout)
+{
+    const utxo = 'utxo_' + txid + '_' + vout;
+    try
+        {
+            let _utxo = await db.get(utxo);
+            _utxo = JSON.parse(_utxo);
+	        console.log(_utxo);
+            return _utxo;
+        }
+        catch(e)
+        {
+		console.log('sys error',e);
+	}
+
+    return null;
+}
+
 
 /**
  * Returns the current max. number for a collectible
@@ -815,13 +850,13 @@ async function indexTransfer(block, blockhash, vout, tx, res, ops, network = 'ma
                 amt = BigInt(amt) + BigInt(utxos[i].amt);
                 await db.put(address_amt, amt.toString());
                 await db.put(utxo, JSON.stringify(utxos[i]));
-                //console.log('3rd push', utxos[i]);
+                console.log('3rd push', utxos[i]);
             }
             catch(e)
             {
                 await db.put(address_amt, utxos[i].amt);
                 await db.put(utxo, JSON.stringify(utxos[i]));
-                //console.log('4th push', utxos[i]);
+                console.log('4th push', utxos[i]);
             }
         }
     }
@@ -1382,7 +1417,7 @@ async function sendTokens(name, to, ticker, id, amount, rate, max_fee = 0, use_c
 {
     ticker = ticker.trim().toLowerCase();
     id = parseInt(id.trim());
-
+console.log(name+','+to+','+ticker+','+id,+','+amount+','+rate+','+max_fee+','+network);
     const deployment = await getDeployment(ticker, id);
 
     if(deployment === null)
