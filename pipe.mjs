@@ -248,10 +248,7 @@ async function getTransfer(txid,vout)
     const utxo = 'utxo_' + txid + '_' + vout;
     try
         {
-            let _utxo = await db.get(utxo);
-            _utxo = JSON.parse(_utxo);
-	        console.log(_utxo);
-            return _utxo;
+            return JSON.stringify(JSON.parse(await db.get(utxo)));
         }
         catch(e)
         {
@@ -2052,7 +2049,7 @@ function formatNumberString(string, decimals) {
     }else
     if(pos > 0){
         string = string.substring(0, pos) + "." + string.substring(pos, string.length);
-    }else{
+    }else{``
         string = '0.' + ( "0".repeat( decimals - string.length ) ) + string;
     }
 
